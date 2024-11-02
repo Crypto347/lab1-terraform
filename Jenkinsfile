@@ -7,7 +7,7 @@ pipeline {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         AWS_REGION            = 'us-east-1'
-        WORKING_DIRECTORY      = "./Terraform/environments/staging" // Sửa lại đường dẫn đến thư mục làm việc
+        WORKING_DIRECTORY      = "./Terraform/environments/staging" 
     }
 
     agent any
@@ -15,8 +15,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    dir(env.WORKING_DIRECTORY) { // Sử dụng biến môi trường
-                        git "https://github.com/Crypto347/lab1-terraform.git"
+                    dir(env.WORKING_DIRECTORY) { 
+                       git branch: 'main', url: 'https://github.com/Crypto347/lab1-terraform.git'
                     }
                 }
             }
@@ -25,7 +25,7 @@ pipeline {
         stage('Plan') {
             steps {
                 script {
-                    dir(env.WORKING_DIRECTORY) { // Sử dụng biến môi trường
+                    dir(env.WORKING_DIRECTORY) { 
                         sh 'terraform init'
                         sh 'terraform plan -out tfplan'
                         sh 'terraform show -no-color tfplan > tfplan.txt'
@@ -43,7 +43,7 @@ pipeline {
 
             steps {
                 script {
-                    def plan = readFile "${env.WORKING_DIRECTORY}/tfplan.txt" // Sử dụng biến môi trường
+                    def plan = readFile "${env.WORKING_DIRECTORY}/tfplan.txt" 
                     input message: "Do you want to apply the plan?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                 }
