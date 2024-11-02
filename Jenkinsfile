@@ -2,32 +2,14 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'us-east-1' // Thay đổi nếu cần
+        AWS_ACCESS_KEY_ID = credentials('SC_AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('SC_AWS_SECRET_ACCESS_KEY')
+        AWS_REGION = 'us-east-1'
         WORKING_DIRECTORY = "./Terraform/environments/staging"
     }
 
     stages {
-        stage('Configure AWS Credentials') {
-            steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'dev-user-aws-credentials'
-                ]]) {
-                    script {
-                        // Cấu hình AWS CLI để sử dụng các biến môi trường AWS
-                        sh '''
-                            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-                            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-                            aws configure set region $AWS_REGION
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
                 checkout scm
                 script {
@@ -36,21 +18,45 @@ pipeline {
             }
         }
 
-        stage('Install Terraform') {
+        stage('Install AWS CLI') {
             steps {
                 script {
-                    // Kiểm tra và cài đặt Terraform nếu cần
+                    // Cài đặt AWS CLI nếu chưa có
                     sh '''
-                        if ! command -v terraform &> /dev/null; then
-                            echo "Terraform not found, installing..."
-                            curl -sL https://releases.hashicorp.com/terraform/1.3.0/terraform_1.3.0_linux_amd64.zip -o terraform.zip
-                            unzip terraform.zip
-                            chmod +x terraform
-                            mv terraform /usr/local/bin/
-                        else
-                            echo "Terraform already installed."
-                        fi
+                    if ! command -v aws &> /dev/null
+                    then
+                        echo "AWS CLI not found. Installing..."
+                        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                        unzip awscliv2.zip
+                        sudo ./aws/install
+                    fi
                     '''
+                }
+            }
+        }
+
+        stage('Configure AWS Credentials') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: 'SC_AWS_ACCESS_KEY_ID'
+                ]]) {
+                    script {
+                        sh 'aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID'
+                        sh 'aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY'
+                        sh 'aws s3 ls'
+                    }
+                }
+            }
+        }
+
+        stage('Setup Terraform') {
+            steps {
+                script {
+                    sh 'curl -sL https://releases.hashicorp.com/terraform/1.3.0/terraform_1.3.0_linux_amd64.zip -o terraform.zip'
+                    sh 'unzip terraform.zip && chmod +x terraform && mv terraform /usr/local/bin/'
                 }
             }
         }
@@ -74,7 +80,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 dir("${env.WORKING_DIRECTORY}") {
-                    sh 'terraform plan -out=tfplan'
+                    sh 'terraform plan'
                 }
             }
         }
@@ -82,20 +88,13 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir("${env.WORKING_DIRECTORY}") {
-                    // Sử dụng file kế hoạch đã tạo để triển khai
-                    sh 'terraform apply -auto-approve tfplan'
+                    sh 'terraform apply -auto-approve'
                 }
             }
         }
     }
 
     post {
-        always {
-            cleanWs() // Xóa workspace sau khi hoàn tất build
-        }
-        success {
-            echo 'Infrastructure deployed successfully!'
-        }
         failure {
             echo 'Deployment failed. Please check the logs for details.'
         }
