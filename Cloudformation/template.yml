@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This is a template for building vpc and ec2"
+Parameters:
+  CreateBy:
+    Description: Represents for this tag is created by
+    Type: String
+    Default: Cloudformation
+  KeyName:
+    Description: Key name of the Key Pair to use for the instance; which can be managed using the `aws_key_pair` resource
+    Type: String
+    Default: group3keykey
+  AmiID:
+    Description: The ID of the AMI
+    Type: AWS::EC2::Image::Id
+    Default: ami-06b21ccaeff8cd686
+Resources:
+  Vpc:
+    Type: Group33::VPC::MyVPC::MODULE
+    Properties:
+      VpcCIDR: "10.3.0.0/16"
+      EnableDNSHostnameVPC: "true"
+      EnableDNSSupportVPC: "true"
+      InstanceTenancy: "default"
+      CreateBy: !Ref CreateBy
+
+  PublicSecurityGroup:
+    Type: Group33::SG::MySG::MODULE
+    Properties:
+      GroupDescription: Only ssh from local machine
+      VpcID: !Ref Vpc.VPC
+      CreateBy: !Ref CreateBy
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+
+  PrivateSecurityGroup:
+    Type: Group33::SG::MySG::MODULE
+    Properties:
+      GroupDescription: Only ssh from public subnet A
+      VpcID: !Ref Vpc.VPC
+      CreateBy: !Ref CreateBy
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !GetAtt Vpc.publicSubnetA.Subnet.CidrBlock
+      IpProtocol: tcp
+
+  PublicEc2:
+    Type: Group33::EC2::MyEC2::MODULE
+    Properties:
+      InstanceType: "t2.nano"
+      AssociatePublicIP: "true"
+      Monitoring: "true"
+      CreateBy: !Ref CreateBy
+      KeyName: !Ref KeyName
+      SubnetID: !Ref Vpc.publicSubnetA.Subnet
+      VpcSecurityGroupIds: !Ref PublicSecurityGroup.SecurityGroup
+      AmiID: !Ref AmiID
+      EC2Name: public ec2
+
+  PrivateEc2:
+    Type: Group33::EC2::MyEC2::MODULE
+    Properties:
+      InstanceType: "t2.nano"
+      AssociatePublicIP: "false"
+      Monitoring: "false"
+      CreateBy: !Ref CreateBy
+      KeyName: !Ref KeyName
+      SubnetID: !Ref Vpc.publicSubnetA.Subnet
+      VpcSecurityGroupIds: !Ref PrivateSecurityGroup.SecurityGroup
+      AmiID: !Ref AmiID
+      EC2Name: private ec2
+
+Outputs: 
+  VpcID:
+    Description: The ID of the VPC
+    Value: !Ref Vpc.VPC
+
+  PublicSecurityGroupID:
+    Description: The ID of the public security group
+    Value: !Ref PublicSecurityGroup.SecurityGroup
+
+  PrivateSecurityGroupID:
+    Description: The ID of the private security group
+    Value: !Ref PrivateSecurityGroup.SecurityGroup
+
+  AmiID:
+    Description: The ID of the AMI used
+    Value: !Ref AmiID
+
+  VpcCIDRBlock:
+    Description: The CIDR block of the VPC
+    Value: !GetAtt Vpc.VPC.CidrBlock
+
+  PublicSubnetAID:
+    Description: The ID of public subnet A
+    Value: !GetAtt Vpc.publicSubnetA.Subnet.SubnetId
+
+  PublicSubnetBID:
+    Description: The ID of public subnet B
+    Value: !GetAtt Vpc.publicSubnetB.Subnet.SubnetId
+
+  PrivateSubnetAID:
+    Description: The ID of private subnet A
+    Value: !GetAtt Vpc.privateSubnetA.Subnet.SubnetId
+
+  PrivateSubnetBID:
+    Description: The ID of private subnet B
+    Value: !GetAtt Vpc.privateSubnetB.Subnet.SubnetId
+
+  PublicSubnetACidrBlock:
+    Description: The CIDR of public subnet A
+    Value: !GetAtt Vpc.publicSubnetA.Subnet.CidrBlock
+
+  PublicSubnetBCidrBlock:
+    Description: The CIDR of public subnet B
+    Value: !GetAtt Vpc.publicSubnetB.Subnet.CidrBlock
+
+  PrivateSubnetACidrBlock:
+    Description: The CIDR of private subnet A
+    Value: !GetAtt Vpc.privateSubnetA.Subnet.CidrBlock
+
+  PrivateSubnetBCidrBlock:
+    Description: The CIDR of private subnet B
+    Value: !GetAtt Vpc.privateSubnetB.Subnet.CidrBlock
+
+  NatGatewayID:
+    Description: Contains the NAT Gateway ID
+    Value: !Ref Vpc.NATGateway
+
+  NatPublicIP:
+    Description: The Elastic IP address associated with the NAT Gateway
+    Value: !GetAtt Vpc.EipNatgateway.PublicIp
+
+  EIPID:
+    Description: Contains the EIP allocation ID
+    Value: !Ref Vpc.EipNatgateway
+
+  IGWID:
+    Description: The ID of the Internet Gateway
+    Value: !Ref Vpc.InternetGateway

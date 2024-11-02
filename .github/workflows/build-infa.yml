@@ -1,0 +1,44 @@
+name: "Terraform"
+on:
+  push:
+    branches: ["dev"]
+    # paths:
+    #   - "Terraform/modules/environments/staging/*"
+permissions: read-all
+jobs:
+  terraform:
+    name: "Terraform"
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.SC_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.SC_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.SC_AWS_REGION }}
+      WORKING_DIRECTORY: "./Terraform/environments/staging"
+    runs-on: ubuntu-latest
+    # Checkout the repository to the GitHub Actions runner
+    steps:
+      - name: "checkout"
+        uses: "actions/checkout@v3"
+
+      - name: List files in repository
+        run: ls -la
+
+      - name: Setup Terraform with specified version on the runner
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.3.0
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: ${{ env.WORKING_DIRECTORY }} 
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: ${{ env.WORKING_DIRECTORY }} 
+
+      - name: Terraform plan
+        run: terraform plan
+        working-directory: ${{ env.WORKING_DIRECTORY }} 
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.WORKING_DIRECTORY }} 

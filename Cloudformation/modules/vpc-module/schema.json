@@ -1,0 +1,206 @@
+{
+    "typeName": "Group33::VPC::MyVPC::MODULE",
+    "description": "Schema for Module Fragment of type Group33::VPC::MyVPC::MODULE",
+    "properties": {
+        "Parameters": {
+            "type": "object",
+            "properties": {
+                "VpcCIDR": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "CIDR ipv4 for this vpc"
+                },
+                "EnableDNSHostnameVPC": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "Should be true to enable DNS hostnames in the VPC"
+                },
+                "EnableDNSSupportVPC": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "Should be true to enable DNS support in the VPC"
+                },
+                "InstanceTenancy": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "A tenancy option for instances launched into the VPC"
+                },
+                "CreateBy": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "Represents for this tag is created by"
+                }
+            }
+        },
+        "Resources": {
+            "properties": {
+                "VPC": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "AWS::EC2::VPC"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "InternetGateway": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "AWS::EC2::InternetGateway"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "IGWAttachToVPC": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "AWS::EC2::VPCGatewayAttachment"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "publicSubnetA": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "Group33::Subnet::MySubnet::MODULE"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "publicSubnetB": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "Group33::Subnet::MySubnet::MODULE"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "EipNatgateway": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "AWS::EC2::EIP"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "NATGateway": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "AWS::EC2::NatGateway"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "privateSubnetA": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "Group33::Subnet::MySubnet::MODULE"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "privateSubnetB": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "Group33::Subnet::MySubnet::MODULE"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "type": "object",
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": true
+}

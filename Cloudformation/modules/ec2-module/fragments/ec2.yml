@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "EC2 Module"
+Parameters:
+  InstanceType:
+    Description: Type of instance
+    Type: String
+    Default: t2.nano
+  AssociatePublicIP: 
+    Description: (Optional) Whether to associate a public IP address with an instance in a VPC.
+    Type: String
+    AllowedValues: [ 'true', 'false']
+    Default: 'false'
+  Monitoring:
+    Description: If true, the launched EC2 instance will have detailed monitoring enabled
+    Type: String
+    AllowedValues: [ 'true', 'false']
+    Default: 'false'
+  CreatedBy:
+    Description: Represents for this tag is created by
+    Type: String
+    Default: Cloudformation
+  KeyName: 
+    Description: Key name of the Key Pair to use for the instance; which can be managed using the `aws_key_pair` resource
+    Type: String
+  SubnetID:
+    Description: The VPC Subnet ID to launch in
+    Type: String
+  VpcSecurityGroupIds:
+    Description: A security group IDs to associate with
+    Type: String
+  AmiID:
+    Description: The ID of the AMI
+    Type: AWS::EC2::Image::Id
+    Default: ami-02396cdd13e9a1257
+  EC2Name:
+    Description: The name of the ec2
+    Type: String
+Conditions:
+  isMonitoring: !Equals [!Ref Monitoring, 'true']
+Resources:
+  EC2:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AmiID
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      Monitoring: !If [isMonitoring, true, false]
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: !Ref AssociatePublicIP
+          SubnetId: !Ref SubnetID
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref VpcSecurityGroupIds
+      Tags:
+        - Key: Name
+          Value: !Ref EC2Name
+        - Key: CreatedBy
+          Value: !Ref CreatedBy

@@ -1,0 +1,192 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "VPC Module"
+Parameters:
+    VpcCIDR:
+        Description: CIDR ipv4 for this vpc
+        Type: String
+        Default: 192.168.0.0/16
+    EnableDNSHostnameVPC:
+        Description: Should be true to enable DNS hostnames in the VPC
+        Type: String 
+        Default: "true"
+    EnableDNSSupportVPC:
+        Description: Should be true to enable DNS support in the VPC
+        Type: String 
+        Default: "true"
+    InstanceTenancy:
+        Description: A tenancy option for instances launched into the VPC
+        Type: String
+        Default: default
+    CreateBy:
+        Description: Represents for this tag is created by
+        Type: String
+        Default: Cloudformation
+Conditions:
+    isEnableDnsHostnames: !Equals [!Ref EnableDNSHostnameVPC, "true"]
+    isEnableDnsSupport: !Equals [!Ref EnableDNSSupportVPC, "true"]
+Resources:
+    VPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCIDR
+            EnableDnsHostnames: !If [isEnableDnsHostnames, true, false]
+            EnableDnsSupport: !If [isEnableDnsSupport, true, false]
+            InstanceTenancy: !Ref InstanceTenancy
+            Tags:
+                - Key: Name
+                  Value: MyVPC
+                - Key: CreateBy
+                  Value: !Ref CreateBy
+
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                - Key: Name
+                  Value: IGW for MyVPC
+                - Key: CreateBy
+                  Value: !Ref CreateBy
+
+    IGWAttachToVPC:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            VpcId: !Ref VPC
+            InternetGatewayId: !Ref InternetGateway
+
+    publicSubnetA:
+        Type: Group33::Subnet::MySubnet::MODULE
+        Properties:
+            VpcID: !Ref VPC
+            VpcCidrBlock: !GetAtt VPC.CidrBlock
+            InternetGatewayId: !Ref InternetGateway
+            NatGatewayId: ""
+            PublicOrPrivate: public
+            MapOnLaunchPublicIp: "true"
+            AzIndex: 0
+            AzAvailabilityZones: A
+            SubnetIndex: 0
+            SubnetCount: 4
+            CreateBy: !Ref CreateBy
+
+    publicSubnetB:
+        Type: Group33::Subnet::MySubnet::MODULE
+        Properties:
+            VpcID: !Ref VPC
+            VpcCidrBlock: !GetAtt VPC.CidrBlock
+            InternetGatewayId: !Ref InternetGateway
+            NatGatewayId: ""
+            PublicOrPrivate: public
+            MapOnLaunchPublicIp: "true"
+            AzIndex: 0
+            AzAvailabilityZones: B
+            SubnetIndex: 1
+            SubnetCount: 4
+            CreateBy: !Ref CreateBy
+
+    EipNatgateway:
+        Type: AWS::EC2::EIP
+        Properties:
+            Domain: vpc
+
+    NATGateway:
+        Type: AWS::EC2::NatGateway
+        Properties:
+            AllocationId: !GetAtt EipNatgateway.AllocationId
+            SubnetId: !GetAtt publicSubnetA.Subnet.SubnetId
+   
+    privateSubnetA:
+        Type: Group33::Subnet::MySubnet::MODULE
+        Properties:
+            VpcID: !Ref VPC
+            VpcCidrBlock: !GetAtt VPC.CidrBlock
+            InternetGatewayId: ""
+            NatGatewayId: !Ref NATGateway
+            PublicOrPrivate: private
+            MapOnLaunchPublicIp: "false"
+            AzIndex: 0
+            AzAvailabilityZones: A
+            SubnetIndex: 2
+            SubnetCount: 4
+            CreateBy: !Ref CreateBy
+
+    privateSubnetB:
+        Type: Group33::Subnet::MySubnet::MODULE
+        Properties:
+            VpcID: !Ref VPC
+            VpcCidrBlock: !GetAtt VPC.CidrBlock
+            InternetGatewayId: ""
+            NatGatewayId: !Ref NATGateway
+            PublicOrPrivate: private
+            MapOnLaunchPublicIp: "false"
+            AzIndex: 0
+            AzAvailabilityZones: B
+            SubnetIndex: 3
+            SubnetCount: 4
+            CreateBy: !Ref CreateBy
+
+Outputs:
+    VpcID:
+        Description: The ID of the VPC
+        Value: !Ref VPC
+
+    VpcInstanceTenancy:
+        Description: Tenancy of instances spun up within VPC
+        Value: !GetAtt VPC.InstanceTenancy
+
+
+    VpcCIDRBlock:
+        Description: The CIDR block of the VPC
+        Value: !GetAtt VPC.CidrBlock
+        
+    PublicSubnetAID:
+        Description: The id of public subnet A
+        Value: !GetAtt publicSubnetA.Subnet.SubnetId
+        
+    PublicSubnetBID:
+        Description: The id of public subnet B
+        Value: !GetAtt publicSubnetB.Subnet.SubnetId
+
+    PrivateSubnetAID:
+        Description: The id of private subnet A
+        Value: !GetAtt privateSubnetA.Subnet.SubnetId
+
+    PrivateSubnetBID:
+        Description: The id of private subnet B
+        Value: !GetAtt privateSubnetB.Subnet.SubnetId
+
+    PublicSubnetACidrBlock:
+        Value: !GetAtt publicSubnetA.Subnet.CidrBlock
+
+    PublicSubnetBCidrBlock:
+        Value: !GetAtt publicSubnetB.Subnet.CidrBlock
+
+    PrivateSubnetACidrBlock:
+        Value: !GetAtt privateSubnetA.Subnet.CidrBlock
+
+    PrivateSubnetBCidrBlock:
+        Value: !GetAtt privateSubnetB.Subnet.CidrBlock
+
+    VpcEnableDnsSupport:
+        Description: Whether or not the VPC has DNS support
+        Value: !If [isEnableDnsSupport, "true", "false"]
+
+    VpcEnableDnsHostnames:
+        Description: Whether or not the VPC has DNS hostname support
+        Value: !If [isEnableDnsHostnames, "true", "false"]
+
+    NatGatewayID:
+        Description: Contains the NAT Gateway ID
+        Value: !Ref NATGateway
+
+
+    EIPID:
+        Description: Contains the EIP allocation ID
+        Value: !Ref EipNatgateway
+
+    EIPPublicIP:
+        Description: Contains the public IP address
+        Value: !GetAtt EipNatgateway.PublicIp
+
+    IGWID:
+        Description: The ID of the Internet Gateway
+        Value: !Ref InternetGateway

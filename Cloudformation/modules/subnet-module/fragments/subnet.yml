@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Define subnet module"
+Parameters:
+    VpcID:
+      Description: id of vpc
+      Type: String
+    VpcCidrBlock:
+      Description: cidr block of vpc
+      Type: String
+    InternetGatewayId:
+      Description: VPC Internet Gateway id
+      Type: String
+    NatGatewayId:
+      Description: VPC Internet Gateway id
+      Type: String
+    PublicOrPrivate:
+      Description: Should the subnet has a route to the Internet
+      Type: String
+      AllowedValues: ['public', 'private']
+    MapOnLaunchPublicIp: 
+      Description: Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is `false`
+      Type: String
+      Default: 'false'
+      AllowedValues: ['true', 'false']
+    AzIndex: 
+      Description: Index of the AZ where the subnet should be created in
+      Type: Number
+      MinValue: 0
+      MaxValue: 3
+    AzAvailabilityZones:
+      Description: Availability zone in vpc
+      Type: String
+      AllowedValues: [A, B, C, D]
+      Default: A
+    SubnetIndex:
+      Description: Index of the subnet
+      Type: Number
+      MinValue: 0
+      MaxValue: 5
+    SubnetCount:
+      Description: To slice the IP address ranges you need to specify how many subnets you want to create in the VPC
+      Type: Number
+      MinValue: 1
+      MaxValue: 6
+    CreateBy: 
+        Description: Represents for this tag is created by
+        Type: String
+        Default: Cloudformation
+Conditions:
+  IsPublic: !Equals [!Ref PublicOrPrivate, 'public']
+  IsPrivate: !Equals [!Ref PublicOrPrivate, 'private']
+  IsPublicIp: !Equals [!Ref MapOnLaunchPublicIp, 'true']
+Resources:
+    Subnet:
+        Type: AWS::EC2::Subnet
+        Properties:
+            AvailabilityZone: !Select [!Ref AzIndex, !GetAZs '']
+            CidrBlock: !Select [!Ref SubnetIndex, !Cidr [!Ref VpcCidrBlock, !Ref SubnetCount, 12]]
+            MapPublicIpOnLaunch: !If [IsPublicIp, true, false]
+            VpcId: !Ref VpcID
+            Tags: 
+              - Key: Name
+                Value: !Sub '${AzAvailabilityZones} ${PublicOrPrivate} subnet'
+              - Key: CreateBy
+                Value: !Ref CreateBy
+
+    SubnetRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref VpcID
+
+    SubnetRouteAttachInternetGateway:
+        Type: AWS::EC2::Route
+        Condition: IsPublic
+        Properties:
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGatewayId
+            RouteTableId: !Ref SubnetRouteTable
+
+    SubnetRouteAttachNatGateway:
+        Type: AWS::EC2::Route
+        Condition: IsPrivate
+        Properties:
+            DestinationCidrBlock: 0.0.0.0/0
+            NatGatewayId: !Ref NatGatewayId
+            RouteTableId: !Ref SubnetRouteTable
+
+    SubnetRouteAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            RouteTableId: !Ref SubnetRouteTable
+            SubnetId: !Ref Subnet
+Outputs:
+    SubnetId:
+        Description: id of subnet
+        Value: !Ref Subnet
+
+    SubnetsCIDRBlocks:
+        Description: CIDR blocks of subnet
+        Value: !GetAtt Subnet.CidrBlock

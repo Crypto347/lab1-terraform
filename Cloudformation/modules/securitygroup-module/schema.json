@@ -1,0 +1,117 @@
+{
+    "typeName": "Group33::SG::MySG::MODULE",
+    "description": "Schema for Module Fragment of type Group33::SG::MySG::MODULE",
+    "properties": {
+        "Parameters": {
+            "type": "object",
+            "properties": {
+                "VpcID": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "the id of vpc"
+                },
+                "CreateBy": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        },
+                        "Description": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type",
+                        "Description"
+                    ],
+                    "description": "Represents for this tag is created by"
+                },
+                "FromPort": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type"
+                    ]
+                },
+                "ToPort": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type"
+                    ]
+                },
+                "CidrIp": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type"
+                    ]
+                },
+                "IpProtocol": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type"
+                    ]
+                },
+                "GroupDescription": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "Type"
+                    ]
+                }
+            }
+        },
+        "Resources": {
+            "properties": {
+                "SecurityGroup": {
+                    "type": "object",
+                    "properties": {
+                        "Type": {
+                            "type": "string",
+                            "const": "AWS::EC2::SecurityGroup"
+                        },
+                        "Properties": {
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "type": "object",
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": true
+}
